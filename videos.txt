@@ -2,3 +2,4 @@
 # Lines starting with # are ignored.
 # Example:
 # https://your-host.example/my-permission-cleared-anime-clip.mp4
+https://argon.razorshell.space/embed/lNRDrwV68L24AvL
