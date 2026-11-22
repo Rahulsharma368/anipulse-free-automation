@@ -1,0 +1,8 @@
+.env
+client_secrets.json
+token.json
+*.mp4
+*.wav
+*.srt
+work/
+__pycache__/
