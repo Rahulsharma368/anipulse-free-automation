@@ -1,1 +1,54 @@
+name: AniPulse link-based publisher
 
+on:
+  workflow_dispatch:
+  schedule:
+    # 12:47 PM and 7:47 PM India time (UTC+5:30); GitHub may delay scheduled runs.
+    - cron: "17 7,14 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: anipulse-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+      - name: Process next video link
+        env:
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          GRAPH_API_VERSION: ${{ vars.GRAPH_API_VERSION }}
+          WHISPER_MODEL: tiny.en
+          TRANSCRIBE: "true"
+          MAX_VIDEO_MB: "95"
+          PRIVACY_STATUS: unlisted
+        run: python main.py
+      - name: Save upload history
+        run: |
+          if ! git diff --quiet -- processed.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add processed.json
+            git commit -m "Update processed video history [skip ci]"
+            git push
+          fi
